@@ -7,7 +7,7 @@ interface toCurrencyProps {
 }
 
 const CurrencyPageCalculator = ({ toCurrency, setToCurrency }: toCurrencyProps) => {
-    const [amount, setAmount] = useState<number | undefined>();
+    const [amount, setAmount] = useState<string>("");
     const [fromCurrency, setFromCurrency] = useState("THB");
     const [result, setResult] = useState<number | undefined>(undefined);
     const [currencies, setCurrencies] = useState<Record<string, string>>({});
@@ -26,12 +26,15 @@ const CurrencyPageCalculator = ({ toCurrency, setToCurrency }: toCurrencyProps) 
 
     useEffect(() => {
         const fetchRate = async () => {
+            const amountNumber = parseFloat(amount || "0");
+
             if (fromCurrency === toCurrency) {
-                setResult(amount);
+                setResult(amountNumber);
                 return;
             }
+
             try {
-                const rate = await fetchCurrencyRate({ from: fromCurrency, to: toCurrency, amount });
+                const rate = await fetchCurrencyRate({ from: fromCurrency, to: toCurrency, amount: amountNumber });
                 setResult(rate);
             } catch (error) {
                 console.error("Error", error);
@@ -80,27 +83,16 @@ const CurrencyPageCalculator = ({ toCurrency, setToCurrency }: toCurrencyProps) 
                             <label>จำนวนเงิน
                                 <input
                                     className="mt-2 max-w-[640px] text-center bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    type="number"
-                                    min={0}
-                                    value={amount === undefined ? "" : amount.toString()}
-                                    onKeyDown={(e) => {
-                                        if (["e", "E", "+", "-"].includes(e.key)) {
-                                            e.preventDefault();
-                                        }
-                                    }}
-                                    onChange={e => {
+                                    type="text"
+                                    value={amount}
+                                    onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value === "") {
-                                            setAmount(undefined)
-                                            return;
-                                        }
-                                        const number = Number(value);
-
-                                        if (number >= 0) {
-                                            setAmount(number);
+                                        if (/^[0-9]*\.?[0-9]*$/.test(value)) {
+                                            setAmount(value);
                                         }
                                     }}
-                                /></label>
+                                />
+                            </label>
                         </div>
                         <div className="mt-2 max-w-[640px] text-center font-bold text-xl bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                             {amount?.toLocaleString()} {fromCurrency} = {result?.toLocaleString()} {toCurrency}
